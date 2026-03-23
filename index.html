@@ -292,6 +292,28 @@ canvas{display:block;width:100%}
 .warn{background:rgba(255,152,0,0.08);border:1px solid rgba(255,152,0,0.25);border-radius:8px;padding:12px 16px;color:#ffa726;font-size:13px;font-weight:600;margin-bottom:12px;font-family:var(--font-body)}
 .warn small{display:block;font-size:11px;font-weight:400;color:rgba(255,152,0,0.6);margin-top:3px}
 
+/* PRO GATING */
+.pro-pill{
+  display:inline-flex;align-items:center;gap:10px;
+  padding:8px 12px;border-radius:8px;
+  background:var(--bg2);border:1.5px solid var(--border2);
+  font-family:var(--font-mono);font-size:11px;font-weight:700;
+  letter-spacing:0.06em;text-transform:uppercase;color:var(--text3);
+}
+.pro-pill .pro-dot{width:8px;height:8px;border-radius:50%;background:var(--text3);box-shadow:none}
+.pro-pill.on{border-color:rgba(200,245,66,0.35);background:rgba(200,245,66,0.06);color:var(--lime)}
+.pro-pill.on .pro-dot{background:var(--lime);box-shadow:0 0 10px rgba(200,245,66,0.25)}
+.pro-locked{
+  padding:18px 16px;background:rgba(5,6,10,0.55);
+  border:1.5px solid var(--border2);border-radius:10px;
+}
+.pro-locked-title{
+  font-family:var(--font-display);font-size:16px;font-weight:800;
+  letter-spacing:0.04em;text-transform:uppercase;color:var(--lime);
+  margin-bottom:6px;text-shadow:0 0 8px rgba(200,245,66,0.10)
+}
+.pro-locked-sub{font-family:var(--font-mono);font-size:11px;color:var(--text3);line-height:1.6;margin-bottom:12px}
+
 /* FORM */
 .field{margin-bottom:14px}
 .field label{display:block;font-family:var(--font-mono);font-size:10px;color:var(--text3);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:6px}
@@ -392,6 +414,12 @@ canvas{display:block;width:100%}
         <option value="150000" style="background:var(--bg2);color:var(--text)">$150,000</option>
       </select>
     </div>
+    <div class="pro-pill" id="pro-pill">
+      <span class="pro-dot" id="pro-dot"></span>
+      <span id="pro-pill-text">PRO: Locked</span>
+    </div>
+    <button class="btn btn-ghost" id="pro-upgrade-btn" onclick="openProModal()" style="padding:8px 12px;font-size:12px;white-space:nowrap;display:none">Unlock Pro</button>
+    <button class="btn btn-ghost" id="pro-manage-btn" onclick="openBillingPortal()" style="padding:8px 12px;font-size:12px;white-space:nowrap;display:none">Manage</button>
     <div class="session-badge" id="session-badge">
       <div class="pulse-dot closed" id="session-dot"></div>
       <span id="session-text" style="font-family:var(--font-mono);font-size:11px"></span>
@@ -515,6 +543,35 @@ canvas{display:block;width:100%}
     <div class="panel fade-in-d2">
       <div class="sec-head"><div class="sec-head-title">Confluence Win Rates</div></div>
       <div id="conf-quality"><div class="empty" style="padding:16px 0;font-size:12px">No closed trades yet</div></div>
+    </div>
+  </div>
+
+  <!-- PRO INSIGHTS -->
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px" id="pro-insights-panels">
+    <div class="panel fade-in-d2" style="margin-bottom:0" id="pro-leak-panel" data-pro-feature="leak-insights">
+      <div class="sec-head">
+        <div class="sec-head-title">Leak Detection Insights</div>
+        <div class="badge sm" style="background:rgba(8,10,14,0.9);border-color:var(--border2);color:var(--text3)" id="pro-leak-pill">LOCKED</div>
+      </div>
+      <div id="pro-leak-content" style="display:none"></div>
+      <div id="pro-leak-locked" class="pro-locked">
+        <div class="pro-locked-title">Pro Required</div>
+        <div class="pro-locked-sub">Unlock rule-break patterns + performance leaks (by sweep setup, session, and confirmation stack).</div>
+        <button class="btn btn-primary" onclick="openProModal()" style="width:100%;justify-content:center">Upgrade Pro ($10/mo)</button>
+      </div>
+    </div>
+
+    <div class="panel fade-in-d3" style="margin-bottom:0" id="pro-session-panel" data-pro-feature="session-insights">
+      <div class="sec-head">
+        <div class="sec-head-title">Session Intelligence</div>
+        <div class="badge sm" style="background:rgba(8,10,14,0.9);border-color:var(--border2);color:var(--text3)" id="pro-session-pill">LOCKED</div>
+      </div>
+      <div id="pro-session-content" style="display:none"></div>
+      <div id="pro-session-locked" class="pro-locked">
+        <div class="pro-locked-title">Pro Required</div>
+        <div class="pro-locked-sub">Unlock win-rate and expectancy by session context (NY/London/Asia + premarket/other).</div>
+        <button class="btn btn-primary" onclick="openProModal()" style="width:100%;justify-content:center">Upgrade Pro ($10/mo)</button>
+      </div>
     </div>
   </div>
 
@@ -1138,6 +1195,30 @@ Examples:
 </div>
 </div>
 
+<!-- ═══════════════ PRO SUBSCRIPTION MODAL ═══════════════ -->
+<div id="pro-modal" class="overlay" style="display:none" onclick="if(event.target===this)closeProModal()">
+  <div class="modal">
+    <div class="modal-title">Unlock Pro</div>
+    <div class="modal-sub">$10/month · advanced performance insights</div>
+
+    <div class="field" style="margin-bottom:10px">
+      <label>Email</label>
+      <input type="email" id="pro-email-input" placeholder="you@example.com" autocomplete="email">
+    </div>
+
+    <div id="pro-sub-status" class="warn" style="display:none"></div>
+
+    <div class="row2" style="margin-top:16px">
+      <button class="btn btn-primary" id="pro-upgrade-confirm-btn" style="flex:1" onclick="startProCheckout()">Subscribe</button>
+      <button class="btn btn-ghost" style="min-width:120px" onclick="closeProModal()">Not now</button>
+    </div>
+
+    <div style="margin-top:14px;font-family:var(--font-mono);font-size:10px;color:var(--text3);line-height:1.6">
+      Stripe handles payment securely. Your email is only used to verify your subscription entitlement.
+    </div>
+  </div>
+</div>
+
 <!-- TradingView -->
 
 
@@ -1151,6 +1232,191 @@ let dir='long';
 let S={};
 let tvWidgets={es:null,nq:null};
 let esTf='5',nqTf='5';
+
+// ═══════════ PRO SUBSCRIPTION (Stripe) ═══════════
+const PRO_EMAIL_KEY = 'ta_pro_email';
+const PRO_CACHE_KEY = 'ta_pro_cache_v1';
+let proState = { isPro: false, status: 'unknown', verifiedAt: 0 };
+
+function setProUI(isPro) {
+  proState.isPro = !!isPro;
+
+  const pill = document.getElementById('pro-pill');
+  const pillText = document.getElementById('pro-pill-text');
+  const upgradeBtn = document.getElementById('pro-upgrade-btn');
+  const manageBtn = document.getElementById('pro-manage-btn');
+
+  if (pill) pill.classList.toggle('on', !!isPro);
+  if (pillText) pillText.textContent = isPro ? 'PRO: Active' : 'PRO: Locked';
+  if (upgradeBtn) upgradeBtn.style.display = isPro ? 'none' : 'inline-flex';
+  if (manageBtn) manageBtn.style.display = isPro ? 'inline-flex' : 'none';
+
+  const leakContent = document.getElementById('pro-leak-content');
+  const leakLocked = document.getElementById('pro-leak-locked');
+  const leakPill = document.getElementById('pro-leak-pill');
+
+  const sessContent = document.getElementById('pro-session-content');
+  const sessLocked = document.getElementById('pro-session-locked');
+  const sessPill = document.getElementById('pro-session-pill');
+
+  if (leakContent) leakContent.style.display = isPro ? 'block' : 'none';
+  if (leakLocked) leakLocked.style.display = isPro ? 'none' : 'block';
+  if (leakPill) {
+    leakPill.textContent = isPro ? 'PRO' : 'LOCKED';
+    leakPill.style.color = isPro ? 'var(--lime)' : 'var(--text3)';
+    leakPill.style.borderColor = isPro ? 'rgba(200,245,66,0.35)' : 'var(--border2)';
+    leakPill.style.background = isPro ? 'rgba(200,245,66,0.06)' : 'rgba(8,10,14,0.9)';
+  }
+
+  if (sessContent) sessContent.style.display = isPro ? 'block' : 'none';
+  if (sessLocked) sessLocked.style.display = isPro ? 'none' : 'block';
+  if (sessPill) {
+    sessPill.textContent = isPro ? 'PRO' : 'LOCKED';
+    sessPill.style.color = isPro ? 'var(--lime)' : 'var(--text3)';
+    sessPill.style.borderColor = isPro ? 'rgba(200,245,66,0.35)' : 'var(--border2)';
+    sessPill.style.background = isPro ? 'rgba(200,245,66,0.06)' : 'rgba(8,10,14,0.9)';
+  }
+}
+
+function closeProModal() {
+  const el = document.getElementById('pro-modal');
+  if (el) el.style.display = 'none';
+}
+
+function openProModal() {
+  if (proState.isPro) return;
+  const el = document.getElementById('pro-modal');
+  if (!el) return;
+  const input = document.getElementById('pro-email-input');
+  const status = document.getElementById('pro-sub-status');
+  if (input) input.value = localStorage.getItem(PRO_EMAIL_KEY) || '';
+  if (status) {
+    status.style.display = 'none';
+    status.textContent = '';
+  }
+  el.style.display = 'flex';
+  setTimeout(() => {
+    if (input) input.focus();
+  }, 50);
+}
+
+function getReturnUrl() {
+  // Return to the app root (works whether the site is served from / or /index.html).
+  const path = window.location.pathname.replace(/\/?index\.html?$/i, '').replace(/\/$/, '');
+  const base = window.location.origin + (path ? path : '/');
+  return base;
+}
+
+async function startProCheckout() {
+  const email = String(document.getElementById('pro-email-input')?.value || '').trim();
+  const status = document.getElementById('pro-sub-status');
+  if (status) {
+    status.style.display = 'none';
+    status.textContent = '';
+  }
+
+  if (!/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email)) {
+    if (status) {
+      status.style.display = 'block';
+      status.textContent = 'Please enter a valid email address.';
+    }
+    return;
+  }
+
+  localStorage.setItem(PRO_EMAIL_KEY, email);
+
+  const payload = { email, returnUrl: getReturnUrl() };
+  const res = await fetch('/api/create-checkout', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+
+  let data = null;
+  try {
+    data = await res.json();
+  } catch {
+    // ignore
+  }
+
+  if (!res.ok || !data?.url) {
+    if (status) {
+      status.style.display = 'block';
+      status.textContent = data?.error || `Checkout error (${res.status})`;
+    }
+    return;
+  }
+
+  window.location.href = data.url;
+}
+
+async function openBillingPortal() {
+  const email = localStorage.getItem(PRO_EMAIL_KEY) || '';
+  if (!email) return openProModal();
+
+  const res = await fetch('/api/create-portal', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email, returnUrl: getReturnUrl() }),
+  });
+
+  let data = null;
+  try { data = await res.json(); } catch {}
+  if (!res.ok || !data?.url) {
+    openProModal();
+    return;
+  }
+
+  window.location.href = data.url;
+}
+
+async function verifyProFromServer(email) {
+  const res = await fetch('/api/verify-entitlement', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email }),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data?.error || 'Verify failed');
+  return data;
+}
+
+async function initPro() {
+  // Default state: locked (fast UI). We re-render once verification returns.
+  setProUI(false);
+
+  const cachedRaw = localStorage.getItem(PRO_CACHE_KEY);
+  let cached = null;
+  try { cached = cachedRaw ? JSON.parse(cachedRaw) : null; } catch {}
+
+  const email = localStorage.getItem(PRO_EMAIL_KEY) || '';
+
+  // Use cache quickly to avoid flicker (re-verify if stale).
+  if (cached && typeof cached.isPro === 'boolean' && cached.verifiedAt) {
+    const ageMs = Date.now() - cached.verifiedAt;
+    if (ageMs < 5 * 60 * 1000) {
+      setProUI(cached.isPro);
+    }
+  }
+
+  const wantsReverify = window.location.search.includes('pro=success');
+  const shouldVerify = wantsReverify || (email && (!cached || Date.now() - cached.verifiedAt >= 5 * 60 * 1000));
+  if (!shouldVerify) return;
+  if (!email) return;
+
+  try {
+    const data = await verifyProFromServer(email);
+    const isPro = !!data?.isPro;
+    proState.status = data?.status || 'unknown';
+    proState.verifiedAt = Date.now();
+    setProUI(isPro);
+    localStorage.setItem(PRO_CACHE_KEY, JSON.stringify({ isPro, status: proState.status, verifiedAt: proState.verifiedAt }));
+    // Refresh dashboard premium panels if user is on dashboard.
+    if (document.getElementById('tab-dashboard')?.classList.contains('active')) renderDashboard();
+  } catch {
+    setProUI(false);
+  }
+}
 
 function resetS(){S={noManip:false,sweepTf:null,sweepDir:null,sweepSession:null,manip2b:false,conf5:[],cont3:[],conf1:[],drawId:false};}
 resetS();
@@ -1643,6 +1909,10 @@ function renderDashboard(){
 
   drawEquity(closed);
   renderConfQuality(closed);
+  if(proState.isPro){
+    renderProLeakInsights(closed);
+    renderProSessionIntelligence(closed);
+  }
   renderRecentTrades();
   updateAccountCard();
 }
@@ -1726,6 +1996,220 @@ function renderConfQuality(closed){
     </div>`;
   });
   document.getElementById('conf-quality').innerHTML=html+'<div class="sq-note">win rate · count — when confluence present</div>';
+}
+
+// ═══════════ PRO INSIGHTS ═══════════
+function avg(arr){
+  if(!arr || !arr.length) return 0;
+  return arr.reduce((s,v)=>s+(parseFloat(v)||0),0)/arr.length;
+}
+
+function classifySessionByET(iso){
+  try{
+    const d = new Date(iso);
+    const et = new Date(d.toLocaleString('en-US', { timeZone: 'America/New_York' }));
+    const day = et.getDay(); // 0=Sun..6=Sat
+    const mins = et.getHours()*60 + et.getMinutes();
+    const asia = (mins >= 18*60) || (mins < 3*60);
+    const london = (mins >= 3*60) && (mins < 8*60);
+    const ny = (day >= 1 && day <= 5) && (mins >= 9*60+30 && mins < 17*60);
+    if(ny) return 'NY';
+    if(london) return 'London';
+    if(asia) return 'Asia';
+    return 'Other';
+  }catch{
+    return 'Other';
+  }
+}
+
+function renderProLeakInsights(closed){
+  const el = document.getElementById('pro-leak-content');
+  if(!el) return;
+  if(!closed.length){
+    el.innerHTML = '<div class="empty" style="padding:12px 0;font-size:12px">Import/close trades to see leak patterns.</div>';
+    return;
+  }
+
+  const total = closed.length;
+  const labeled = closed.filter(t => t.sweepTf && t.sweepSession && t.sweepDir);
+  const labeledPct = total ? Math.round((labeled.length/total)*100) : 0;
+
+  const rule2bLeaks = closed.filter(t => t.sweepSession === 'premarket' && t.manip2b === false);
+  const directionMismatches = closed.filter(t => {
+    if(t.sweepDir === 'lows') return t.position !== 'long';
+    if(t.sweepDir === 'highs') return t.position !== 'short';
+    return false;
+  });
+  const dataMissing = closed.filter(t => {
+    const c5 = (t.conf5 || []).length;
+    const c3 = (t.cont3 || []).length;
+    const c1 = (t.conf1 || []).length;
+    return c5 === 0 || c3 === 0 || c1 === 0 || !t.drawId;
+  });
+
+  const adherence = closed.filter(t => t.followed_rules).length;
+  const adherencePct = total ? Math.round((adherence/total)*100) : 0;
+
+  // Worst sweep timeframe by win rate (only when sweepTf exists)
+  const byTf = {};
+  closed.forEach(t => {
+    if(!t.sweepTf) return;
+    byTf[t.sweepTf] = byTf[t.sweepTf] || [];
+    byTf[t.sweepTf].push(t);
+  });
+
+  const tfStats = Object.entries(byTf)
+    .map(([tf, arr]) => {
+      const wins = arr.filter(t => t.pnl > 0).length;
+      const wr = arr.length ? (wins/arr.length)*100 : 0;
+      return { tf, n: arr.length, wr, avgPnl: avg(arr.map(t => t.pnl)) };
+    })
+    .sort((a,b) => a.wr - b.wr);
+
+  const worst = tfStats.slice(0,3);
+  const worstHtml = worst.length
+    ? worst.map(s => {
+        const tone = s.wr >= 50 ? 'var(--lime)' : 'var(--red)';
+        const width = Math.max(0, Math.min(100, s.wr));
+        return `<div class="cq-row" style="padding:0;margin-bottom:4px">
+          <span class="cq-label">${s.tf}</span>
+          <div class="cq-bar-wrap"><div class="cq-bar"><div class="cq-bar-fill" style="width:${width}%;background:${tone}"></div></div></div>
+          <span class="cq-val" style="color:${tone}">${s.wr.toFixed(0)}%</span>
+          <span class="cq-count">${s.n}</span>
+        </div>`;
+      }).join('')
+    : '<div class="empty" style="padding:12px 0;font-size:12px">Label sweep timeframes to see leak performance.</div>';
+
+  const candidates = [
+    { key: 'rule2b', count: rule2bLeaks.length, name: 'Rule 2b leaks', detail: 'Premarket sweep recorded without a manipulation candle.' },
+    { key: 'dir', count: directionMismatches.length, name: 'Direction mismatches', detail: 'sweepDir (lows/highs) does not match long/short.' },
+    { key: 'missing', count: dataMissing.length, name: 'Missing step data', detail: 'Missing confirmations and/or draw on liquidity.' },
+  ].sort((a,b) => b.count - a.count);
+
+  const top = candidates[0];
+  const rec = top.count
+    ? `Focus next session: fix “${top.name}” first. ${top.detail}`
+    : 'Your latest dataset looks consistent. Keep labeling sweep/session/timeframe for sharper insights.';
+
+  const warnBoxTone = top.key === 'rule2b' ? 'rgba(255,152,0,0.06)' : 'rgba(200,245,66,0.06)';
+  const warnBorder = top.key === 'rule2b' ? 'rgba(255,152,0,0.25)' : 'rgba(200,245,66,0.25)';
+  const warnColor = top.key === 'rule2b' ? '#ffa726' : 'var(--lime)';
+
+  el.innerHTML = `
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px">
+      <div style="background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:14px 14px">
+        <div style="font-family:var(--font-mono);font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px">Data Labeled</div>
+        <div style="font-family:var(--font-display);font-size:28px;font-weight:900;color:var(--lime);text-shadow:0 0 10px rgba(200,245,66,0.10)">${labeledPct}%</div>
+        <div style="font-family:var(--font-mono);font-size:11px;color:var(--text2)">${labeled.length} / ${total} closed trades</div>
+      </div>
+      <div style="background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:14px 14px">
+        <div style="font-family:var(--font-mono);font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px">Rule Adherence</div>
+        <div style="font-family:var(--font-display);font-size:28px;font-weight:900;color:${adherencePct>=80?'var(--lime)':'var(--cyan)'};text-shadow:0 0 10px rgba(0,212,255,0.08)">${adherencePct}%</div>
+        <div style="font-family:var(--font-mono);font-size:11px;color:var(--text2)">${adherence} / ${total} followed</div>
+      </div>
+    </div>
+
+    <div style="font-family:var(--font-mono);font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:10px">Rule-break Signals</div>
+    <div style="padding:12px 14px;background:${warnBoxTone};border:1.5px solid ${warnBorder};border-radius:8px;margin-bottom:16px">
+      <div style="font-family:var(--font-display);font-size:13px;font-weight:800;color:${warnColor};letter-spacing:0.04em;text-transform:uppercase;margin-bottom:6px">${top.count ? top.name : 'No active leaks detected'}</div>
+      <div style="font-family:var(--font-mono);font-size:11px;color:var(--text2);line-height:1.6">
+        ${rule2bLeaks.length ? `Rule 2b leaks: ${rule2bLeaks.length}<br>` : 'Rule 2b leaks: 0<br>'}
+        ${directionMismatches.length ? `Direction mismatches: ${directionMismatches.length}<br>` : 'Direction mismatches: 0<br>'}
+        ${dataMissing.length ? `Missing step data: ${dataMissing.length}` : 'Missing step data: 0'}
+      </div>
+    </div>
+    <div class="sq-note" style="margin-top:-6px;margin-bottom:14px">${rec}</div>
+
+    <div style="font-family:var(--font-mono);font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px">Worst Sweep Timeframes</div>
+    ${worstHtml}
+
+    <div class="sq-note" style="margin-top:12px">Tip: Pro insights get sharper once sweep/session metadata is fully labeled.</div>
+  `;
+}
+
+function renderProSessionIntelligence(closed){
+  const el = document.getElementById('pro-session-content');
+  if(!el) return;
+  if(!closed.length){
+    el.innerHTML = '<div class="empty" style="padding:12px 0;font-size:12px">Import/close trades to see session intelligence.</div>';
+    return;
+  }
+
+  const groups = {};
+  closed.forEach(t => {
+    const s = classifySessionByET(t.entryTime);
+    groups[s] = groups[s] || [];
+    groups[s].push(t);
+  });
+
+  const order = ['Asia','London','NY','Other'];
+  const sessionRows = order
+    .filter(s => groups[s] && groups[s].length)
+    .map(s => {
+      const arr = groups[s];
+      const wins = arr.filter(t => t.pnl > 0).length;
+      const wr = arr.length ? (wins/arr.length)*100 : 0;
+      const ap = avg(arr.map(t => t.pnl));
+
+      const byTf = {};
+      arr.forEach(t => {
+        if(!t.sweepTf) return;
+        byTf[t.sweepTf] = byTf[t.sweepTf] || [];
+        byTf[t.sweepTf].push(t);
+      });
+
+      const bestTf = Object.entries(byTf)
+        .map(([tf, a]) => {
+          const w = a.filter(x => x.pnl > 0).length;
+          const bw = a.length ? (w/a.length)*100 : 0;
+          return { tf, n: a.length, wr: bw };
+        })
+        .sort((a,b) => b.wr - a.wr)[0];
+
+      return { session: s, n: arr.length, wins, wr, avgPnl: ap, bestTf };
+    });
+
+  sessionRows.sort((a,b) => b.wr - a.wr);
+  const top = sessionRows[0];
+
+  const tableHtml = order
+    .filter(s => groups[s] && groups[s].length)
+    .map(s => {
+      const r = sessionRows.find(x => x.session === s);
+      const tone = r.wr >= 50 ? 'var(--lime)' : 'var(--red)';
+      const width = Math.max(0, Math.min(100, r.wr));
+      const countTxt = `${r.n} · Avg ${r.avgPnl>=0?'+':''}$${r.avgPnl.toFixed(0)}`;
+      return `<div class="cq-row" style="padding:0;margin-bottom:4px">
+        <span class="cq-label">${r.session}</span>
+        <div class="cq-bar-wrap"><div class="cq-bar"><div class="cq-bar-fill" style="width:${width}%;background:${tone}"></div></div></div>
+        <span class="cq-val" style="color:${tone}">${r.wr.toFixed(0)}%</span>
+        <span class="cq-count" title="Win rate · count · avg PnL">${countTxt}</span>
+      </div>`;
+    }).join('');
+
+  const bestTfTxt = top?.bestTf?.tf
+    ? `${top.bestTf.tf} (${top.bestTf.wr.toFixed(0)}% on ${top.bestTf.n})`
+    : 'Not enough labeled sweep timeframes yet';
+
+  el.innerHTML = `
+    <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:12px;flex-wrap:wrap">
+      <div>
+        <div style="font-family:var(--font-mono);font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px">Best Session (current dataset)</div>
+        <div style="font-family:var(--font-display);font-size:26px;font-weight:900;color:var(--lime);text-shadow:0 0 10px rgba(200,245,66,0.08)">${top?.session || '—'}</div>
+        <div style="font-family:var(--font-mono);font-size:11px;color:var(--text2)">${top ? `${top.wr.toFixed(0)}% win rate · Avg ${top.avgPnl>=0?'+':''}$${top.avgPnl.toFixed(0)} PnL` : ''}</div>
+      </div>
+      <div style="flex:1;min-width:240px;background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:12px 14px">
+        <div style="font-family:var(--font-mono);font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px">What to repeat</div>
+        <div style="font-family:var(--font-mono);font-size:12px;color:var(--text2);line-height:1.7">
+          Best sweepTf inside the best session: <span style="color:var(--lime);font-weight:700">${bestTfTxt}</span>
+        </div>
+        <div class="sq-note" style="margin-top:8px">This is guidance for your review, not a blind entry trigger.</div>
+      </div>
+    </div>
+
+    <div style="font-family:var(--font-mono);font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:10px">Win Rates by Session Context (ET)</div>
+    ${tableHtml}
+  `;
 }
 
 // ═══════════ TRADE ROWS ═══════════
@@ -2569,6 +3053,7 @@ accountSize = parseInt(localStorage.getItem('ta_account_size') || '50000');
 renderDashboard();
 renderSessions();
 initCharts();
+initPro();
 window.addEventListener('resize',()=>{
   if(document.getElementById('tab-dashboard').classList.contains('active'))renderDashboard();
 });
